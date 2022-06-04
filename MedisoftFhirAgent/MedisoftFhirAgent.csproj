@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <UserSecretsId>dotnet-MedisoftFhirAgent-A7AF725D-776D-4272-874A-8BDC31DB6F04</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Advantage.Data.Provider">
+      <HintPath>..\..\..\Windows\assembly\GAC\Advantage.Data.Provider\11.10.1.30__e33137c86a38dc06\Advantage.Data.Provider.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
