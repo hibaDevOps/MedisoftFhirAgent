@@ -119,7 +119,7 @@ namespace MedisoftFhirAgent.Repositories
                         string result = response.Content.ReadAsStringAsync().Result;
                         if (result == "true")
                         {
-                            // this.sendPatientDataMigration(patients);  //changes the status of the migrated data
+                             this.sendPatientDataMigration(patients);  //changes the status of the migrated data
                             _lgc.Log("Patient_Updated_MessageQueue_", result.ToString());
                         }
                         else

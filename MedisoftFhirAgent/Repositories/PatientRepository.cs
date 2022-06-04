@@ -28,7 +28,7 @@ namespace MedisoftFhirAgent.Repositories
         public List<Patient> GetAll()
         {
             //return _context.Patients();
-            return _context.getSecheduledPatients();
+            return _context.Patients();
         }
         public List<Patient> GetAllUpdated()
         {

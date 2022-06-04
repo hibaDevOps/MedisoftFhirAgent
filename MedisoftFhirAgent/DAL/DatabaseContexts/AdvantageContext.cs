@@ -67,7 +67,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     + " trim(Language) Language,trim([street 1])address1,trim([street 2]) address2,	trim(city) city,trim(state) state,"
                     + " trim([zip code]) zip, [phone 1] hPhone,[phone 2] wPhone,[phone 3] mobile, [phone 4] fax,[phone 5] altPhone,"
                     + " [date of Birth] dob, country,trim(email) email,trim([social security number]) ssn , "
-                    + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT INNER JOIN MWMIG_INS ON MWPAT.[chart number] = MWMIG_INS.[KeyValue] WHERE MWMIG_INS.[Status] = 0";
+                    + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT_TAR WHERE MWPAT_TAR.[Migration Status] = 0";
                 AdsDataReader reader = null;
 
                 using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -338,7 +338,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string joined = string.Join(",", Identierfiers);
             Debug.WriteLine(joined);
 
-            string query = "UPDATE MWMIG_INS SET MWMIG_INS.[Status] = 1 FROM MWMIG_INS WHERE MWMIG_INS.[KeyValue] IN ("+joined+")";
+            string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Migration Status] = 1 FROM MWPAT_TAR WHERE MWPAT_TAR.[Chart Number] IN (" + joined+")";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -488,10 +488,10 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "MERGE MWPAT_TAR AS ta "
                          + "USING MWPAT AS tb "
                          + "ON(ta.[Chart Number] = tb.[Chart Number]) "
-                         + "WHEN MATCHED AND (ta.[First Name] <> tb.[First Name] OR ta.[Last Name] <> tb.[Last Name])THEN "
-                         + "UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Migration Status] = 0"
+                         + "WHEN MATCHED "
+                         + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Chart Number] = tb.[Chart Number], ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 0 WHERE ta.[First Name] <> tb.[First Name] "
                          + "WHEN NOT MATCHED THEN "
-                         + "INSERT INTO MWPAT_TAR([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [CreatedAt], [Migration Status]) VALUES (tb.[Chart Number], tb.[First Name], tb.[Last Name], tb.[Middle Initial], tb.[Sex], tb.[Date of Birth], tb.[State], tb.[Social Security Number], tb.[Street 1], tb.[City], tb.[Patient Type], tb.[Country], tb.[CreatedAt], 0 )";
+                         + "INSERT ([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [Migration Status]) VALUES (tb.[Chart Number], tb.[First Name], tb.[Last Name], tb.[Middle Initial], tb.[Sex], tb.[Date of Birth], tb.[State], tb.[Social Security Number], tb.[Street 1], tb.[City], tb.[Patient Type], tb.[Country], 0 )";
 
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
