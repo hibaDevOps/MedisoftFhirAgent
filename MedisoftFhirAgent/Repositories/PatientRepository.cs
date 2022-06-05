@@ -78,5 +78,24 @@ namespace MedisoftFhirAgent.Repositories
         {
             return _context.setPatientUpdatedDataMigrationStatus(lisOfPayload);
         }
+
+        public bool migrationConfirmed(Patient obj)
+        {
+            if (_context.findMigratedPatient(obj))
+            {
+                if (_context.setMigrationConplete(obj))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

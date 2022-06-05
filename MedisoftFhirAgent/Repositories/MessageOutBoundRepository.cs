@@ -54,14 +54,13 @@ namespace MedisoftFhirAgent.Repositories
 
                         var url = "https://localhost:44393/MessageQueue/push";
 
-                        Debug.WriteLine(json);
+                        Debug.WriteLine(data.ReadAsStringAsync().Result);
                         var response = await client.PostAsync(url, data);
 
                         string result = response.Content.ReadAsStringAsync().Result;
                         if (result == "true")
                         {
                             this.sendPatientDataMigration(listOfObject);  //changes the status of the migrated data
-
                         }
                         else
                         {
@@ -80,63 +79,6 @@ namespace MedisoftFhirAgent.Repositories
 
         }
 
-        public async Task<MessageQueueOutBound> sendUpdatedDataToIntegrationAsync(List<Patient> listOfObject)
-        {
-
-
-            if (listOfObject != null)
-            {
-                DateTime dt = DateTime.Now;
-                MessageQueueOutBound msgQueue = new MessageQueueOutBound();
-                msgQueue.CreatedDate = String.Format("{0:yyyy-MM-dd}", dt);
-                msgQueue.Error = "";
-                msgQueue.Id = "";
-                msgQueue.Payload = convertListToPayload(listOfObject);
-                msgQueue.ProcessingDate = "";
-                msgQueue.Source = "MediSoft";
-                msgQueue.Status = "";
-                msgQueue.ResourceType = "Patient";
-                msgQueue.Type = "I";
-
-
-
-                List<Patient> patients = new List<Patient>();
-                using (var httpClientHandler = new HttpClientHandler())
-                {
-                    httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
-                    using (var client = new HttpClient(httpClientHandler))
-                    {
-
-                        var json = JsonSerializer.Serialize(msgQueue);
-                        var data = new StringContent(json, Encoding.UTF8, "application/json");
-
-                        var url = "https://localhost:44393/MessageQueue/push";
-
-                        var response = await client.PostAsync(url, data);
-
-                        string result = response.Content.ReadAsStringAsync().Result;
-                        if (result == "true")
-                        {
-                             this.sendPatientDataMigration(listOfObject);  //changes the status of the migrated data
-                            _lgc.Log("Patient_Updated_MessageQueue_", result.ToString());
-                        }
-                        else
-                        {
-                            _lgc.Log("Patient_MessageQueue_Push_API_Issues", json);
-                        }
-                    }
-                }
-
-
-
-
-                return msgQueue;
-
-            }
-            return null;
-
-
-        }
         public string convertListToPayload(List<Patient> listToPayload)
         {
             var json = JsonSerializer.Serialize(listToPayload);
@@ -151,6 +93,7 @@ namespace MedisoftFhirAgent.Repositories
         {
             return _ipr.setUpdatedDataMigrationStatus(pr);
         }
-      
+
+     
     }
 }

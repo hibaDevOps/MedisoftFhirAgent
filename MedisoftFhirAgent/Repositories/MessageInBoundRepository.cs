@@ -54,6 +54,111 @@ namespace MedisoftFhirAgent.Repositories
             }
         }
 
-      
+        public async Task<List<MessageQueueInBound>> verify()
+        {
+            using (var httpClientHandler = new HttpClientHandler())
+            {
+                httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+                using (var client = new HttpClient(httpClientHandler))
+                {
+
+
+                    var url = "https://localhost:44393/MessageQueue/Verify?sourceSystem=MediSoft";
+
+                    var response = await client.GetAsync(url);
+
+                    string result = response.Content.ReadAsStringAsync().Result;
+                    if (result != "")
+                    {
+                        List<MessageQueueInBound> allData = JsonSerializer.Deserialize<List<MessageQueueInBound>>(result);
+                        _ipr.Log("Verify_API", result);
+                        return allData;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Internal server Error");
+                        return null;
+                    }
+                }
+            }
+
+        }
+
+        public async Task<List<MessageQueueInBound>> verifyIntegration()
+        {
+            List<MessageQueueInBound> _msgQueue = new List<MessageQueueInBound>();
+            _msgQueue = await verify();
+            if (_msgQueue != null)
+            {
+                foreach (var queue in _msgQueue)
+                {
+                    if (queue.Fhirid != "")
+                    {
+                        if (_ptr.migrationConfirmed(queue.Payload))
+                        {
+                            queue.Status = "C";
+                        }
+                    }
+                    else
+                    {
+                        queue.Status = "F";
+                    }
+                }
+            }
+            return _msgQueue;
+        }
+
+        public async Task<bool> updateInbounddStatus()
+        {
+            List<MessageQueueInBound> _inList = new List<MessageQueueInBound>();
+            List<MessageQueueOutBound> _outList = new List<MessageQueueOutBound>();
+            _inList = await verifyIntegration();
+            foreach(var lst in _inList) {
+                MessageQueueOutBound ms = new MessageQueueOutBound();
+                ms.Id = lst.Id;
+                ms.MessageQueueId = lst.MessageQueueId;
+                ms.ProcessingDate = lst.ProcessingDate;
+                ms.CreatedDate = lst.CreatedDate;
+                ms.Status = lst.Status;
+                ms.Type = lst.Type;
+                ms.Source = lst.Source;
+                ms.ResourceType = lst.ResourceType;
+                ms.Payload = JsonSerializer.Serialize(lst.Payload);
+                _outList.Add(ms);
+            }
+
+            if(_outList.Count() > 0)
+            {
+                using (var httpClientHandler = new HttpClientHandler())
+                {
+                    httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+                    using (var client = new HttpClient(httpClientHandler))
+                    {
+
+                        var json = JsonSerializer.Serialize(_outList);
+                        var data = new StringContent(json, Encoding.UTF8, "application/json");
+
+                        var url = "https://localhost:44393/MessageQueue/inbound/update";
+
+                        var response = await client.PostAsync(url, data);
+
+                        string result = response.Content.ReadAsStringAsync().Result;
+                        if (result == "true")
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            _ipr.Log("Update_MessageQueue_Push_API_Issues", result.ToString());
+                            return false;
+                        }
+                    }
+                }
+
+            }
+            return false;
+        }
+        
+
     }
 }

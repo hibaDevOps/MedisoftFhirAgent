@@ -11,6 +11,10 @@ namespace MedisoftFhirAgent.Interfaces
     {
         //public List<T> MapDataToSource(string dataJson);
         public Task<List<MessageQueueInBound>> getMessageQueueInBound();
+        public Task<List<MessageQueueInBound>> verifyIntegration();
+
+        public Task<bool> updateInbounddStatus();
+
 
     }
 }

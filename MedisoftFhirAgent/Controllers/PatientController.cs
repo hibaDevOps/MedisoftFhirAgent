@@ -51,5 +51,9 @@ namespace MedisoftFhirAgent.Controllers
         {
             return _ipr.LogPatients();
         }
+        public bool migrationConfirmed(Patient obj)
+        {
+            return _ipr.migrationConfirmed(obj);
+        }
     }
 }

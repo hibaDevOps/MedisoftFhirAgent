@@ -17,5 +17,7 @@ namespace MedisoftFhirAgent.DAL.Entities.MessagesQueue
         public string Source { get; set; }
         public string Status { get; set; }
         public string Type { get; set; }
+        public string Fhirid { get; set; }
+        public string MessageQueueId { get; set; }
     }
 }

@@ -15,5 +15,7 @@ namespace MedisoftFhirAgent.Interfaces
         public string LogPatients();
         public bool savePatients(List<Patient> lisofPatients);
         public List<Patient> getPatientsDataFromJson(List<MessageQueueInBound> msgB);
+
+        public bool migrationConfirmed(Patient obj);
     }
 }

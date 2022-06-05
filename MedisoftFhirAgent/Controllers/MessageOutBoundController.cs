@@ -37,11 +37,7 @@ namespace MedisoftFhirAgent.Controllers
            return await _ipr.sendToIntegrationAsync(_pr.GetAllPatients());
         }
       
-        public Task<MessageQueueOutBound> sendUpdatedPatientData()
-        {
-            return _ipr.sendUpdatedDataToIntegrationAsync(_pr.GetAllUpdatedPatients());
-        }
-
+ 
 
     }
 }

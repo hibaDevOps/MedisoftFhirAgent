@@ -17,18 +17,9 @@ namespace MedisoftFhirAgent.DAL.Entities.MessagesQueue
         public string Source { get; set; }
         public string Status { get; set; }
         public string Type { get; set; }
+        public string Fhirid { get; set; }
+        public string MessageQueueId { get; set; }
     }
 
-    public class PayloadPatient
-    {
-        public string Identifier { get; set; }
-        public string prefix { get; set; }
-        public string firstName { get; set; }
-        public string lastName { get; set; }
-        public string birthDate { get; set; }
-        public string birthPlace { get; set; }
-        public string citizenshipCode { get; set; }
-        public string gender { get; set; }
-        public PatientAddress address { get; set; }
-    }
+   
 }

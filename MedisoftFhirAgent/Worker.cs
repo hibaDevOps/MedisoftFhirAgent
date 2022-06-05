@@ -19,7 +19,6 @@ namespace MedisoftFhirAgent
         private MessageInBoundController _InData;
         private SchedulerController _sch;
         private DateTime dt_start;
-        private DateTime dt_end;
         private MergeController _mg;
 
 
@@ -52,8 +51,8 @@ namespace MedisoftFhirAgent
                 //  var lst = _InData.savePatientToMedisoft();
                 string patLog = JsonSerializer.Serialize(_pat.sendPatientData());
                 _log.Log("Medisoft Database", patLog + DateTime.Now);
-                //  string patUpdLog = JsonSerializer.Serialize(_pat.sendUpdatedPatientData());
-                // _log.Log("Medisoft Updated Patients", patUpdLog + DateTime.Now);
+              //    string patUpdLog = JsonSerializer.Serialize(_pat.sendUpdatedPatientData());
+              //   _log.Log("Medisoft Updated Patients", patUpdLog + DateTime.Now);
 
                 //  _medisoft.getAllPatients();
                 _mg.mergeMedisoftPatients();

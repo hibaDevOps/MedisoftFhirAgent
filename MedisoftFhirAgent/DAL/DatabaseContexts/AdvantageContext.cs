@@ -67,7 +67,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     + " trim(Language) Language,trim([street 1])address1,trim([street 2]) address2,	trim(city) city,trim(state) state,"
                     + " trim([zip code]) zip, [phone 1] hPhone,[phone 2] wPhone,[phone 3] mobile, [phone 4] fax,[phone 5] altPhone,"
                     + " [date of Birth] dob, country,trim(email) email,trim([social security number]) ssn , "
-                    + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT_TAR WHERE MWPAT_TAR.[Migration Status] = 0";
+                    + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT_TAR WHERE MWPAT_TAR.[Migration Status] = 'NM'";
                 AdsDataReader reader = null;
 
                 using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -338,7 +338,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string joined = string.Join(",", Identierfiers);
             Debug.WriteLine(joined);
 
-            string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Migration Status] = 1 FROM MWPAT_TAR WHERE MWPAT_TAR.[Chart Number] IN (" + joined+")";
+            string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Migration Status] = 'M' FROM MWPAT_TAR WHERE MWPAT_TAR.[Chart Number] IN (" + joined+")";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -489,7 +489,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                          + "USING MWPAT AS tb "
                          + "ON(ta.[Chart Number] = tb.[Chart Number])  "
                          + "WHEN NOT MATCHED THEN "
-                         + "INSERT ([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [Migration Status]) VALUES (tb.[Chart Number], tb.[First Name], tb.[Last Name], tb.[Middle Initial], tb.[Sex], tb.[Date of Birth], tb.[State], tb.[Social Security Number], tb.[Street 1], tb.[City], tb.[Patient Type], tb.[Country], 0 )";
+                         + "INSERT ([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [Migration Status]) VALUES (tb.[Chart Number], tb.[First Name], tb.[Last Name], tb.[Middle Initial], tb.[Sex], tb.[Date of Birth], tb.[State], tb.[Social Security Number], tb.[Street 1], tb.[City], tb.[Patient Type], tb.[Country], 'NM' )";
 
 
 
@@ -519,7 +519,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                         + "USING MWPAT AS tb "
                         + "ON(ta.[Chart Number] = tb.[Chart Number] AND ta.[First Name] <> tb.[First Name]) "
                         + "WHEN MATCHED  "
-                        + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Chart Number] = tb.[Chart Number], ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 0 ";
+                        + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Chart Number] = tb.[Chart Number], ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 'NM' ";
 
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -547,6 +547,64 @@ namespace MedisoftFhirAgent.DatabaseContexts
             this.trackNewPatients();
             this.trackUpdatedPatients();
         }
+
+        public bool findMigratedPatient(Patient obj)
+        {
+            string query = "Select ta.[Chart Number] From MWPAT_TAR ta WHERE ta.[Chart Number] = " + obj.Identifier +" AND ta.[Migration Status]='M'";
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        return true;
+                    }
+
+                    conn.Close();
+                    return false ;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                    return false;
+                }
+            }
+        }
+        public bool setMigrationConplete(Patient obj)
+        {
+            string query = "MERGE MWPAT_TAR ta "
+                          + "ON(ta.[Chart Number] = "+obj.Identifier+") "
+                          + "WHEN MATCHED THEN "
+                          + "UPDATE SET ta.[Migration Status] = 'C'";
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+                    
+                    conn.Close();
+                    return true;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                    return false;
+                }
+            }
+        }
+
+      
     }
 
 }
