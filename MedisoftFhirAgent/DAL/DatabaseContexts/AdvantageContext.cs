@@ -483,15 +483,43 @@ namespace MedisoftFhirAgent.DatabaseContexts
             }
         }
 
-        public void mergeMedisoft()
+        public void trackNewPatients()
         {
-            string query = "MERGE MWPAT_TAR AS ta "
+            string query1 = "MERGE MWPAT_TAR AS ta "
                          + "USING MWPAT AS tb "
-                         + "ON(ta.[Chart Number] = tb.[Chart Number]) "
-                         + "WHEN MATCHED "
-                         + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Chart Number] = tb.[Chart Number], ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 0 WHERE ta.[First Name] <> tb.[First Name] "
+                         + "ON(ta.[Chart Number] = tb.[Chart Number])  "
                          + "WHEN NOT MATCHED THEN "
                          + "INSERT ([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [Migration Status]) VALUES (tb.[Chart Number], tb.[First Name], tb.[Last Name], tb.[Middle Initial], tb.[Sex], tb.[Date of Birth], tb.[State], tb.[Social Security Number], tb.[Street 1], tb.[City], tb.[Patient Type], tb.[Country], 0 )";
+
+
+
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query1;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                }
+            }
+
+        }
+        public void trackUpdatedPatients()
+        {
+            string query = "MERGE MWPAT_TAR AS ta "
+                        + "USING MWPAT AS tb "
+                        + "ON(ta.[Chart Number] = tb.[Chart Number] AND ta.[First Name] <> tb.[First Name]) "
+                        + "WHEN MATCHED  "
+                        + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Chart Number] = tb.[Chart Number], ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 0 ";
 
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -513,6 +541,11 @@ namespace MedisoftFhirAgent.DatabaseContexts
             }
 
 
+        }
+        public void mergeMedisoft()
+        {
+            this.trackNewPatients();
+            this.trackUpdatedPatients();
         }
     }
 

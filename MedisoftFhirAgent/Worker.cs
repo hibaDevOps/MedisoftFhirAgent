@@ -50,14 +50,14 @@ namespace MedisoftFhirAgent
                 _log.Log("Medisoft Database", "Service is recalled at: " + DateTime.Now);
                 // _sch.logScheduler(dt_start, dt_end);
                 //  var lst = _InData.savePatientToMedisoft();
-                 string patLog = JsonSerializer.Serialize(_pat.sendPatientData());
+                string patLog = JsonSerializer.Serialize(_pat.sendPatientData());
                 _log.Log("Medisoft Database", patLog + DateTime.Now);
                 //  string patUpdLog = JsonSerializer.Serialize(_pat.sendUpdatedPatientData());
                 // _log.Log("Medisoft Updated Patients", patUpdLog + DateTime.Now);
 
                 //  _medisoft.getAllPatients();
                 _mg.mergeMedisoftPatients();
-                dt_start = dt_end;
+                //dt_start = dt_end;
                 await Task.Delay(60000, stoppingToken);
             }
         }

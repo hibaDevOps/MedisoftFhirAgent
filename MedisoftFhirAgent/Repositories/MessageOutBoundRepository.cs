@@ -43,8 +43,6 @@ namespace MedisoftFhirAgent.Repositories
 
 
 
-                List<Patient> patients = new List<Patient>();
-                patients = _ipr.GetAll();
                 using (var httpClientHandler = new HttpClientHandler())
                 {
                     httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
@@ -56,12 +54,13 @@ namespace MedisoftFhirAgent.Repositories
 
                         var url = "https://localhost:44393/MessageQueue/push";
 
+                        Debug.WriteLine(json);
                         var response = await client.PostAsync(url, data);
 
                         string result = response.Content.ReadAsStringAsync().Result;
                         if (result == "true")
                         {
-                           // this.sendPatientDataMigration(patients);  //changes the status of the migrated data
+                            this.sendPatientDataMigration(listOfObject);  //changes the status of the migrated data
 
                         }
                         else
@@ -102,7 +101,6 @@ namespace MedisoftFhirAgent.Repositories
 
 
                 List<Patient> patients = new List<Patient>();
-                patients = _ipr.GetAll();
                 using (var httpClientHandler = new HttpClientHandler())
                 {
                     httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
@@ -119,7 +117,7 @@ namespace MedisoftFhirAgent.Repositories
                         string result = response.Content.ReadAsStringAsync().Result;
                         if (result == "true")
                         {
-                             this.sendPatientDataMigration(patients);  //changes the status of the migrated data
+                             this.sendPatientDataMigration(listOfObject);  //changes the status of the migrated data
                             _lgc.Log("Patient_Updated_MessageQueue_", result.ToString());
                         }
                         else
