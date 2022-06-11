@@ -2,8 +2,10 @@
 using MedisoftFhirAgent.DAL.Entities;
 using MedisoftFhirAgent.DAL.Entities.MessagesQueue;
 using MedisoftFhirAgent.Interfaces;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -70,8 +72,9 @@ namespace MedisoftFhirAgent.Repositories
                     string result = response.Content.ReadAsStringAsync().Result;
                     if (result != "")
                     {
-                        List<MessageQueueInBound> allData = JsonSerializer.Deserialize<List<MessageQueueInBound>>(result);
-                        _ipr.Log("Verify_API", result);
+                        result = result.Replace(System.Environment.NewLine, string.Empty);
+                        List<MessageQueueInBound> allData = JsonConvert.DeserializeObject<List<MessageQueueInBound>>(result);
+                        _ipr.Log("Verify_API", JsonConvert.SerializeObject(allData));
                         return allData;
                     }
                     else
@@ -88,16 +91,20 @@ namespace MedisoftFhirAgent.Repositories
         {
             List<MessageQueueInBound> _msgQueue = new List<MessageQueueInBound>();
             _msgQueue = await verify();
-            if (_msgQueue != null)
+
+           if (_msgQueue != null)
             {
+                Debug.WriteLine(_msgQueue);
+
                 foreach (var queue in _msgQueue)
                 {
                     if (queue.Fhirid != "")
                     {
-                        if (_ptr.migrationConfirmed(queue.Payload))
+                        Debug.WriteLine(queue.Fhirid);
+                       /* if (_ptr.migrationConfirmed(queue.Payload))
                         {
                             queue.Status = "C";
-                        }
+                        }*/
                     }
                     else
                     {
@@ -123,7 +130,7 @@ namespace MedisoftFhirAgent.Repositories
                 ms.Type = lst.Type;
                 ms.Source = lst.Source;
                 ms.ResourceType = lst.ResourceType;
-                ms.Payload = JsonSerializer.Serialize(lst.Payload);
+                ms.Payload = JsonConvert.SerializeObject(lst.Payload);
                 _outList.Add(ms);
             }
 
@@ -135,7 +142,7 @@ namespace MedisoftFhirAgent.Repositories
                     using (var client = new HttpClient(httpClientHandler))
                     {
 
-                        var json = JsonSerializer.Serialize(_outList);
+                        var json = JsonConvert.SerializeObject(_outList);
                         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
                         var url = "https://localhost:44393/MessageQueue/inbound/update";

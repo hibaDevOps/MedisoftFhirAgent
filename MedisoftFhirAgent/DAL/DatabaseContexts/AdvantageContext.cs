@@ -519,7 +519,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                         + "USING MWPAT AS tb "
                         + "ON(ta.[Chart Number] = tb.[Chart Number] AND ta.[First Name] <> tb.[First Name]) "
                         + "WHEN MATCHED  "
-                        + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Chart Number] = tb.[Chart Number], ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 'NM' ";
+                        + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 'NM' ";
 
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
@@ -573,6 +573,57 @@ namespace MedisoftFhirAgent.DatabaseContexts
                 {
                     _lgc.Log("Merge_data_scheduler_", ex.Message);
                     return false;
+                }
+            }
+        }
+        public bool findPatient(Patient obj)
+        {
+            string query = "Select ta.[Chart Number] From MWPAT ta WHERE ta.[Chart Number] = " + obj.Identifier;
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        return true;
+                    }
+
+                    conn.Close();
+                    return false;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public void updatePatient(Patient obj)
+        {
+            string query = "UPDATE MWPAT tb SET tb.[First Name] = " + obj.firstName + ", tb.[Last Name] = " + obj.lastName + ", tb.[Middle Initial] = " + obj.prefix + ", tb.[Date of Birth] = " + obj.birthDate + ", tb.[Ssn] = " + obj.citizenshipCode + ", tb.[Sex] = " + obj.gender + ", tb.[Street 1] = " + obj.address.appartmentNo + " " + obj.address.streetNo + " " + obj.address.streetName + ", tb.[Zip Code] = " + obj.address.postalCode + ", tb.[City] = " + obj.address.city + " ,tb.[Country] = " + obj.address.country+" WHERE tb.[Chart Number] = "+obj.Identifier;
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("update_patient_", ex.Message);
                 }
             }
         }

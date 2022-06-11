@@ -81,6 +81,7 @@ namespace MedisoftFhirAgent.Repositories
 
         public bool migrationConfirmed(Patient obj)
         {
+            Debug.WriteLine(obj.Identifier);
             if (_context.findMigratedPatient(obj))
             {
                 if (_context.setMigrationConplete(obj))

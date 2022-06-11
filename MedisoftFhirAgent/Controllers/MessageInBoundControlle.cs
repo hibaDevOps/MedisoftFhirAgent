@@ -36,5 +36,10 @@ namespace MedisoftFhirAgent.Controllers
         {
             return _ipr.sendToIntegrationAsync(_pr.GetAllPatients());
         }
+
+        public Task<bool> updateInboundStatus()
+        {
+            return _iBound.updateInbounddStatus();
+        }
     }
 }
