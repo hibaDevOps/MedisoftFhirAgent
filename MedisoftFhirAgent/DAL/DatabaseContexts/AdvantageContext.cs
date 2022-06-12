@@ -550,7 +550,8 @@ namespace MedisoftFhirAgent.DatabaseContexts
 
         public bool findMigratedPatient(Patient obj)
         {
-            string query = "Select ta.[Chart Number] From MWPAT_TAR ta WHERE ta.[Chart Number] = " + obj.Identifier +" AND ta.[Migration Status]='M'";
+            string query = "Select ta.[Chart Number] From MWPAT_TAR ta WHERE ta.[Chart Number] = '" + obj.Identifier +"' AND ta.[Migration Status]='M'";
+            Debug.WriteLine(query);
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
             {
@@ -567,6 +568,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     }
 
                     conn.Close();
+
                     return false ;
                 }
                 catch (AdsException ex)
@@ -630,7 +632,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
         public bool setMigrationConplete(Patient obj)
         {
             string query = "MERGE MWPAT_TAR ta "
-                          + "ON(ta.[Chart Number] = "+obj.Identifier+") "
+                          + "ON(ta.[Chart Number] = '"+obj.Identifier+"') " 
                           + "WHEN MATCHED THEN "
                           + "UPDATE SET ta.[Migration Status] = 'C'";
             AdsDataReader reader = null;

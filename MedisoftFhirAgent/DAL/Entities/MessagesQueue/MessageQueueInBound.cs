@@ -12,7 +12,7 @@ namespace MedisoftFhirAgent.DAL.Entities.MessagesQueue
         public string CreatedDate { get; set; }
         public string ProcessingDate { get; set; }
         public string Error { get; set; }
-        public Patient Payload { get; set; }
+        public  string Payload { get; set; }
         public string ResourceType { get; set; }
         public string Source { get; set; }
         public string Status { get; set; }

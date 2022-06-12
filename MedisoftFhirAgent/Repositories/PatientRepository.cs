@@ -48,8 +48,8 @@ namespace MedisoftFhirAgent.Repositories
             {
                 if (inBound.Payload != null)
                 {
-                    Patient p = inBound.Payload;
-                    _pr.Add(p);
+                   // Patient p = inBound.Payload;
+                   // _pr.Add(p);
                   
                 }
             }

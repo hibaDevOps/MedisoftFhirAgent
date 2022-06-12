@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace MedisoftFhirAgent.Repositories
@@ -70,6 +71,7 @@ namespace MedisoftFhirAgent.Repositories
                     var response = await client.GetAsync(url);
 
                     string result = response.Content.ReadAsStringAsync().Result;
+                   
                     if (result != "")
                     {
                         result = result.Replace(System.Environment.NewLine, string.Empty);
@@ -101,13 +103,21 @@ namespace MedisoftFhirAgent.Repositories
                     if (queue.Fhirid != "")
                     {
                         Debug.WriteLine(queue.Fhirid);
-                       /* if (_ptr.migrationConfirmed(queue.Payload))
+                        if (_ptr.migrationConfirmed(JsonConvert.DeserializeObject<Patient>(queue.Payload)))
                         {
+                            Debug.WriteLine("Fhir found but record found in migrated records");
                             queue.Status = "C";
-                        }*/
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Fhir found but record not found in migrated records");
+                            queue.Status = "F";
+                        }
                     }
                     else
                     {
+                        Debug.WriteLine("Fhir not found");
+
                         queue.Status = "F";
                     }
                 }
@@ -120,49 +130,50 @@ namespace MedisoftFhirAgent.Repositories
             List<MessageQueueInBound> _inList = new List<MessageQueueInBound>();
             List<MessageQueueOutBound> _outList = new List<MessageQueueOutBound>();
             _inList = await verifyIntegration();
-            foreach(var lst in _inList) {
-                MessageQueueOutBound ms = new MessageQueueOutBound();
-                ms.Id = lst.Id;
-                ms.MessageQueueId = lst.MessageQueueId;
-                ms.ProcessingDate = lst.ProcessingDate;
-                ms.CreatedDate = lst.CreatedDate;
-                ms.Status = lst.Status;
-                ms.Type = lst.Type;
-                ms.Source = lst.Source;
-                ms.ResourceType = lst.ResourceType;
-                ms.Payload = JsonConvert.SerializeObject(lst.Payload);
-                _outList.Add(ms);
-            }
+            _ipr.Log("veriyIntegrationUpdate", JsonConvert.SerializeObject(_inList));
+             foreach(var lst in _inList) {
+                 MessageQueueOutBound ms = new MessageQueueOutBound();
+                 ms.Id = lst.Id;
+                 ms.MessageQueueId = lst.MessageQueueId;
+                 ms.ProcessingDate = lst.ProcessingDate;
+                 ms.CreatedDate = lst.CreatedDate;
+                 ms.Status = lst.Status;
+                 ms.Type = lst.Type;
+                 ms.Source = lst.Source;
+                 ms.ResourceType = lst.ResourceType;
+                 ms.Payload = JsonConvert.SerializeObject(lst.Payload);
+                 _outList.Add(ms);
+             }
 
-            if(_outList.Count() > 0)
-            {
-                using (var httpClientHandler = new HttpClientHandler())
-                {
-                    httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
-                    using (var client = new HttpClient(httpClientHandler))
-                    {
+             if(_outList.Count() > 0)
+             {
+                 using (var httpClientHandler = new HttpClientHandler())
+                 {
+                     httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+                     using (var client = new HttpClient(httpClientHandler))
+                     {
 
-                        var json = JsonConvert.SerializeObject(_outList);
-                        var data = new StringContent(json, Encoding.UTF8, "application/json");
+                         var json = JsonConvert.SerializeObject(_outList);
+                         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
-                        var url = "https://localhost:44393/MessageQueue/inbound/update";
+                         var url = "https://localhost:44393/MessageQueue/inbound/update";
 
-                        var response = await client.PostAsync(url, data);
+                         var response = await client.PostAsync(url, data);
 
-                        string result = response.Content.ReadAsStringAsync().Result;
-                        if (result == "true")
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            _ipr.Log("Update_MessageQueue_Push_API_Issues", result.ToString());
-                            return false;
-                        }
-                    }
-                }
+                         string result = response.Content.ReadAsStringAsync().Result;
+                         if (result == "true")
+                         {
+                             return true;
+                         }
+                         else
+                         {
+                             _ipr.Log("Update_MessageQueue_Push_API_Issues", result.ToString());
+                             return false;
+                         }
+                     }
+                 }
 
-            }
+             }
             return false;
         }
         
