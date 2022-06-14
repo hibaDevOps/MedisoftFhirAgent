@@ -48,9 +48,11 @@ namespace MedisoftFhirAgent.Repositories
             {
                 if (inBound.Payload != null)
                 {
-                   // Patient p = inBound.Payload;
-                   // _pr.Add(p);
-                  
+                    inBound.Payload = inBound.Payload.Replace(System.Environment.NewLine, string.Empty);
+
+                    Patient p = JsonSerializer.Deserialize<Patient>(inBound.Payload);
+                     _pr.Add(p);
+
                 }
             }
 
@@ -66,6 +68,7 @@ namespace MedisoftFhirAgent.Repositories
             if (lisofPatients != null)
             {
                 _context.insertIntoPatients(lisofPatients);
+                _context.createInboundRecord(lisofPatients);
                 return true;
             }
             return false;
@@ -78,7 +81,10 @@ namespace MedisoftFhirAgent.Repositories
         {
             return _context.setPatientUpdatedDataMigrationStatus(lisOfPayload);
         }
-
+        public bool logFailedRecords(string identifier, string type, string message)
+        {
+            return _context.logFailedRecords(identifier, type, message);
+        }
         public bool migrationConfirmed(Patient obj)
         {
             Debug.WriteLine(obj.Identifier);

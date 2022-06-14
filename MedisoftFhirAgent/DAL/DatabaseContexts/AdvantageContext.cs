@@ -56,7 +56,31 @@ namespace MedisoftFhirAgent.DatabaseContexts
 
         }
 
+        public bool logFailedRecords(string migId, string type, string message)
+        {
+            string query = "INSERT INTO MWMIG_ERR ([Migration ID], [Entity Type], [Message]) VALUES ('"+migId+"','"+type+"','"+message+"')";
+            Debug.WriteLine(query);
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
 
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+                    return true;
+
+                    conn.Close();
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Log_data_scheduler_", ex.Message);
+                    return false;
+                }
+            }
+        }
 
         public List<Patient> Patients()
         {
@@ -369,6 +393,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string joined = "";
             foreach(var pt in listPatients)
             {
+                pt.Identifier = "New01000";
                 List<string> eachPat = new List<string>();
                 eachPat.Add("\'" + pt.Identifier + "\'");
                 eachPat.Add("\'" +pt.firstName+ "\'");
@@ -483,11 +508,80 @@ namespace MedisoftFhirAgent.DatabaseContexts
             }
         }
 
+        public void createInboundRecord(List<Patient> listPatients)
+        {
+            List<string> inst = new List<string>();
+            string joined = "";
+            foreach (var pt in listPatients)
+            {
+                List<string> eachPat = new List<string>();
+                eachPat.Add("\'" + pt.Identifier + "\'");
+                eachPat.Add("\'" +"Patient"+ "\'");
+                joined = string.Join(",", eachPat);
+                inst.Add("(" + joined + ")");
+            }
+            string result = string.Join(",", inst);
+
+            string query = "INSERT INTO MWMIG_INS ([KeyValue], [TableType]) VALUES " + result;
+            Debug.WriteLine(query);
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Log_data_scheduler_", ex.Message);
+                }
+            }
+        }
+
+
+        public bool isInboundReord(string identifier, string type)
+        {
+            string query = "Select ta.[KeyValue] From MWMIG_INS ta WHERE ta.[KeyValue] = '" + identifier + "' AND ta.[TableType]='"+type+"'";
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        return true;
+                    }
+
+                    conn.Close();
+
+                    return false;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                    return false;
+                }
+            }
+        }
+
+
+
         public void trackNewPatients()
         {
             string query1 = "MERGE MWPAT_TAR AS ta "
-                         + "USING MWPAT AS tb "
-                         + "ON(ta.[Chart Number] = tb.[Chart Number])  "
+                         + "USING (SELECT * FROM MWPAT tw WHERE tw.[Chart Number] NOT IN (SELECT [KeyValue] FROM MWMIG_INS tn)) AS tb "
+                         + "ON(ta.[Chart Number] = tb.[Chart Number])   "
                          + "WHEN NOT MATCHED THEN "
                          + "INSERT ([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [Migration Status]) VALUES (tb.[Chart Number], tb.[First Name], tb.[Last Name], tb.[Middle Initial], tb.[Sex], tb.[Date of Birth], tb.[State], tb.[Social Security Number], tb.[Street 1], tb.[City], tb.[Patient Type], tb.[Country], 'NM' )";
 
@@ -656,6 +750,8 @@ namespace MedisoftFhirAgent.DatabaseContexts
                 }
             }
         }
+
+       
 
       
     }

@@ -38,12 +38,17 @@ namespace MedisoftFhirAgent.Controllers
         {
 
             List<MessageQueueInBound> msgObj = JsonConvert.DeserializeObject<List<MessageQueueInBound>>(dataJson);
+            Debug.WriteLine("test exception");
             return msgObj;
 
         }
+        public bool logFailedRecords(string identifier, string type, string message)
+        {
+            return _ipr.logFailedRecords(identifier, type, message);
+        }
         public bool savePatients(string obj)
         {
-            Debug.WriteLine(this.MapDataToSource(obj));
+          //  Debug.WriteLine(this.MapDataToSource(obj));
             _ipr.savePatients(_ipr.getPatientsDataFromJson(this.MapDataToSource(obj)));
             return true;
         }
