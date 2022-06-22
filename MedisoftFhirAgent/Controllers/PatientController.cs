@@ -30,6 +30,11 @@ namespace MedisoftFhirAgent.Controllers
         {
             return _ipr.GetAll();
         }
+
+        public List<Patient> GetAllDeletedPatients()
+        {
+            return _ipr.GetAllDeletedPatients();
+        }
         public List<Patient> GetAllUpdatedPatients()
         {
             return _ipr.GetAllUpdated();

@@ -10,5 +10,7 @@ namespace MedisoftFhirAgent.Interfaces
     public interface IMessageOutBoundRepository<T> where T:class
     {
         public  Task<MessageQueueOutBound>  sendToIntegrationAsync(List<T> listOfObject);
+
+        public Task<MessageQueueOutBound> sendDeletedToIntegrationAsync(List<T> listOfObjects);
  }
 }

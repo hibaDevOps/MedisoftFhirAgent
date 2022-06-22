@@ -64,11 +64,26 @@ namespace MedisoftFhirAgent.Repositories
 ;        }
         public bool savePatients(List<Patient> lisofPatients)
         {
+            List<Patient> newPatients = new List<Patient>();
             Debug.WriteLine(lisofPatients);
             if (lisofPatients != null)
             {
-                _context.insertIntoPatients(lisofPatients);
-                _context.createInboundRecord(lisofPatients);
+                foreach (var pat in lisofPatients)
+                {
+                    if (_context.findPatient(pat))
+                    {
+                        _context.updatePatient(pat);
+                    }
+                    else
+                    {
+                        newPatients.Add(pat);
+                    }
+                }
+                if (newPatients.Count() > 0)
+                {
+                    _context.insertIntoPatients(newPatients);
+                    _context.createInboundRecord(lisofPatients);
+                }
                 return true;
             }
             return false;
@@ -103,6 +118,11 @@ namespace MedisoftFhirAgent.Repositories
             {
                 return false;
             }
+        }
+
+        public List<Patient> GetAllDeletedPatients()
+        {
+            return _context.DeletedPatients();
         }
     }
 }

@@ -18,5 +18,7 @@ namespace MedisoftFhirAgent.Interfaces
 
         public bool migrationConfirmed(Patient obj);
         public bool logFailedRecords(string identifier, string type, string message);
+
+        public List<Patient> GetAllDeletedPatients();
     }
 }

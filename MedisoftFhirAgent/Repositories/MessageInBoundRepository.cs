@@ -34,12 +34,12 @@ namespace MedisoftFhirAgent.Repositories
                 {
 
 
-                    var url = "https://localhost:44393/MessageQueue/pull?sourceSystem=Medisoft";
+                    var url = "https://yeatspatientportal-integration-staging.azurewebsites.net/MessageQueue/pull?sourceSystem=Medisoft";
 
                     var response = await client.GetAsync(url);
 
                     string result = response.Content.ReadAsStringAsync().Result;
-                    result = "[{\"id\":\"11\",\"messsgeQueueId\":\"15\",\"createdDate\":\"5/17/202212:00:00AM\",\"type\":\"I\",\"processingDate\":\"5/28/20228:32:40PM\",\"payload\":\"{\\r\\n\\\"identifier\\\":\\\"TIMMMMMM\\\",\\r\\n\\\"prefix\\\":\\\"Mr\\\",\\r\\n\\\"firstName\\\":\\\"ABC\\\",\\r\\n\\\"lastName\\\":\\\"XYZ\\\",\\r\\n\\\"birthDate\\\":\\\"1991-02-15\\\",\\r\\n\\\"birthPlace\\\":\\\"NorthCarolina\\\",\\r\\n\\\"citizenshipCode\\\":\\\"US\\\",\\r\\n\\\"gender\\\":\\\"Male\\\",\\r\\n\\\"address\\\":{\\r\\n\\\"streetName\\\":\\\"St1\\\",\\r\\n\\\"streetNo\\\":\\\"18\\\",\\r\\n\\\"appartmentNo\\\":\\\"1008\\\",\\r\\n\\\"postalCode\\\":\\\"27703\\\",\\r\\n\\\"city\\\":\\\"NorthCarolina\\\",\\r\\n\\\"country\\\":\\\"US\\\",\\r\\n\\\"type\\\":\\\"string\\\"\\r\\n}\\r\\n}\",\"error\":\"\",\"resourceType\":\"Patient\",\"source\":\"MediSoft\",\"fhirid\":\"MEDINT0006\",\"status\":\"VC\"}]"; 
+                    result = "[{\"id\":\"11\",\"messsgeQueueId\":\"15\",\"createdDate\":\"5/17/202212:00:00AM\",\"type\":\"I\",\"processingDate\":\"5/28/20228:32:40PM\",\"payload\":\"{\\r\\n\\\"identifier\\\":\\\"TIMMMMMP\\\",\\r\\n\\\"prefix\\\":\\\"Mr\\\",\\r\\n\\\"firstName\\\":\\\"ABC\\\",\\r\\n\\\"lastName\\\":\\\"XYZ\\\",\\r\\n\\\"birthDate\\\":\\\"1991-02-15\\\",\\r\\n\\\"birthPlace\\\":\\\"NorthCarolina\\\",\\r\\n\\\"citizenshipCode\\\":\\\"US\\\",\\r\\n\\\"gender\\\":\\\"Male\\\",\\r\\n\\\"address\\\":{\\r\\n\\\"streetName\\\":\\\"St1\\\",\\r\\n\\\"streetNo\\\":\\\"18\\\",\\r\\n\\\"appartmentNo\\\":\\\"1008\\\",\\r\\n\\\"postalCode\\\":\\\"27703\\\",\\r\\n\\\"city\\\":\\\"NorthCarolina\\\",\\r\\n\\\"country\\\":\\\"US\\\",\\r\\n\\\"type\\\":\\\"string\\\"\\r\\n}\\r\\n}\",\"error\":\"\",\"resourceType\":\"Patient\",\"source\":\"MediSoft\",\"fhirid\":\"MEDINT0006\",\"status\":\"VC\"}]"; 
                     if (result !="")
                     {
                        // List<MessageQueueInBound> allData = JsonSerializer.Deserialize<List<MessageQueueInBound>>(result);
@@ -66,7 +66,7 @@ namespace MedisoftFhirAgent.Repositories
                 {
 
 
-                    var url = "https://localhost:44393/MessageQueue/Verify?sourceSystem=MediSoft";
+                    var url = "https://yeatspatientportal-integration-staging.azurewebsites.net/MessageQueue/Verify?sourceSystem=MediSoft";
 
                     var response = await client.GetAsync(url);
 
@@ -160,7 +160,7 @@ namespace MedisoftFhirAgent.Repositories
                          var json = JsonConvert.SerializeObject(_outList);
                          var data = new StringContent(json, Encoding.UTF8, "application/json");
 
-                         var url = "https://localhost:44393/MessageQueue/inbound/update";
+                         var url = "https://yeatspatientportal-integration-staging.azurewebsites.net/MessageQueue/inbound/update";
 
                          var response = await client.PostAsync(url, data);
 

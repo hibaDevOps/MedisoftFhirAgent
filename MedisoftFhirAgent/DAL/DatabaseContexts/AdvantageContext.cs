@@ -159,6 +159,83 @@ namespace MedisoftFhirAgent.DatabaseContexts
             return null;
         }
 
+        public List<Patient> DeletedPatients()
+        {
+            try
+            {
+                string query = "select trim([chart number]) ChartNumber, trim([last Name]) lastName,trim([first Name]) firstName,"
+                    + " trim([middle name]) middleName,trim([middle initial]) as prefix, trim(sex) sex ,trim(Suffix) suffix,trim(race) race ,trim(Ethnicity) Ethnicity,"
+                    + " trim(Language) Language,trim([street 1])address1,trim([street 2]) address2,	trim(city) city,trim(state) state,"
+                    + " trim([zip code]) zip, [phone 1] hPhone,[phone 2] wPhone,[phone 3] mobile, [phone 4] fax,[phone 5] altPhone,"
+                    + " [date of Birth] dob, country,trim(email) email,trim([social security number]) ssn , "
+                    + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT_TAR WHERE MWPAT_TAR.[Deleted] = 1";
+                AdsDataReader reader = null;
+
+                using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+                {
+                    try
+
+                    {
+                        conn.Open();
+                        cmd = conn.CreateCommand();
+                        cmd.CommandText = query;
+                        reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            List<Patient> patients = new List<Patient>();
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    patients.Add(new Patient
+                                    {
+                                        Identifier = reader["ChartNumber"].ToString(),
+                                        firstName = reader["firstName"].ToString(),
+                                        lastName = reader["lastName"].ToString(),
+                                        prefix = reader["prefix"].ToString(),
+                                        birthDate = reader["dob"].ToString(),
+                                        birthPlace = reader["city"].ToString(),
+                                        citizenshipCode = reader["ssn"].ToString(),
+                                        gender = reader["sex"].ToString(),
+                                        address = new PatientAddress
+                                        {
+                                            streetName = reader["address1"].ToString(),
+                                            streetNo = reader["address2"].ToString(),
+                                            appartmentNo = "",
+                                            postalCode = reader["zip"].ToString(),
+                                            city = reader["city"].ToString(),
+                                            country = reader["country"].ToString(),
+                                            type = "",
+
+
+                                        }
+                                    });
+
+
+                                }
+                                conn.Close();
+                                return patients;
+
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        }
+                    }
+                    catch (AdsException ex)
+                    {
+                        _lgc.Log("Medisoft Database exception", ex.Message);
+                    }
+                }
+            }
+            catch (AdsException ex)
+            {
+                _lgc.Log("Medisoft Database exception", ex.Message);
+
+            }
+            return null;
+        }
         public List<Patient> getSecheduledPatients()
         {
             try
@@ -393,7 +470,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string joined = "";
             foreach(var pt in listPatients)
             {
-                pt.Identifier = "New01000";
+                pt.Identifier = "SAMP09";
                 List<string> eachPat = new List<string>();
                 eachPat.Add("\'" + pt.Identifier + "\'");
                 eachPat.Add("\'" +pt.firstName+ "\'");
@@ -575,7 +652,28 @@ namespace MedisoftFhirAgent.DatabaseContexts
             }
         }
 
+        public void MergeYeatsRecordsUpdatedByMedisoft()
+        {
+            string query = "DELETE FROM MWMIG_INS Where [KeyValue] IN (SELECT tn.[KeyValue] FROM MWMIG_INS tn INNER JOIN MWPAT tp ON tn.[KeyValue] = tp.[Chart Number] WHERE tp.[Date Modified] IS NOT NULL)";
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
 
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_updated_by_medisoft_", ex.Message);
+                }
+            }
+        }
 
         public void trackNewPatients()
         {
@@ -636,10 +734,40 @@ namespace MedisoftFhirAgent.DatabaseContexts
 
 
         }
+
+           public void MergeDeletedRecords()
+           {
+            string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Deleted] = 1 FROM MWPAT_TAR ta "+
+                            "WHERE ta.[Chart Number] not in "+ 
+                                    "(SELECT c.[Chart Number] "+
+                                       "FROM MWPAT c ); ";
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Deleted_records_exception_", ex.Message);
+                }
+            }
+
+
+        }
         public void mergeMedisoft()
         {
+            this.MergeYeatsRecordsUpdatedByMedisoft();
             this.trackNewPatients();
             this.trackUpdatedPatients();
+            this.MergeDeletedRecords();
         }
 
         public bool findMigratedPatient(Patient obj)
