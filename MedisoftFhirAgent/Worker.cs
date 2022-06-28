@@ -47,18 +47,19 @@ namespace MedisoftFhirAgent
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
              //   dt_end = DateTime.Now;
                 _log.Log("Medisoft Database", "Service is recalled at: " + DateTime.Now);
+                string patLog1 = JsonSerializer.Serialize(_pat.sendDeletedPaitentsData());
+                _log.Log("Medisoft Database deletes", patLog1 + DateTime.Now);
                 // _sch.logScheduler(dt_start, dt_end);
-               var lst = _InData.savePatientToMedisoft();
-             
-              //    string patUpdLog = JsonSerializer.Serialize(_pat.sendUpdatedPatientData());
-              //   _log.Log("Medisoft Updated Patients", patUpdLog + DateTime.Now);
+                //   var lst = _InData.savePatientToMedisoft();
 
-               // //  _medisoft.getAllPatients();
-                 _mg.mergeMedisoftPatients();
-             //   string patLog = JsonSerializer.Serialize(_pat.sendPatientData());
-               //_log.Log("Medisoft Database", patLog + DateTime.Now);
-             //  string patLog1 = JsonSerializer.Serialize(_pat.sendDeletedPaitentsData());
-               // _log.Log("Medisoft Database deletes", patLog1 + DateTime.Now);
+                //    string patUpdLog = JsonSerializer.Serialize(_pat.sendUpdatedPatientData());
+                //   _log.Log("Medisoft Updated Patients", patUpdLog + DateTime.Now);
+
+                // //  _medisoft.getAllPatients();
+                _mg.mergeMedisoftPatients();
+               string patLog = JsonSerializer.Serialize(_pat.sendPatientData());
+               _log.Log("Medisoft Database", patLog + DateTime.Now);
+             
                 await _InData.updateInboundStatus();
 
                 //dt_start = dt_end;

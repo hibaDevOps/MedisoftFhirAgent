@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MedisoftFhirAgent.DAL.Entities.Appointment
+{
+    public class ParticipantType
+    {
+        public string id
+        {
+            get; set;
+        }
+     
+     }
+}

@@ -470,7 +470,6 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string joined = "";
             foreach(var pt in listPatients)
             {
-                pt.Identifier = "SAMP09";
                 List<string> eachPat = new List<string>();
                 eachPat.Add("\'" + pt.Identifier + "\'");
                 eachPat.Add("\'" +pt.firstName+ "\'");
@@ -802,7 +801,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
         }
         public bool findPatient(Patient obj)
         {
-            string query = "Select ta.[Chart Number] From MWPAT ta WHERE ta.[Chart Number] = " + obj.Identifier;
+            string query = "Select ta.[Chart Number] From MWPAT ta WHERE ta.[Chart Number] = '" + obj.Identifier + "'";
             AdsDataReader reader = null;
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
             {
@@ -823,7 +822,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                 }
                 catch (AdsException ex)
                 {
-                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                    _lgc.Log("Patient_already_In_MEdisoft_", ex.Message);
                     return false;
                 }
             }
@@ -831,8 +830,10 @@ namespace MedisoftFhirAgent.DatabaseContexts
 
         public void updatePatient(Patient obj)
         {
-            string query = "UPDATE MWPAT tb SET tb.[First Name] = " + obj.firstName + ", tb.[Last Name] = " + obj.lastName + ", tb.[Middle Initial] = " + obj.prefix + ", tb.[Date of Birth] = " + obj.birthDate + ", tb.[Ssn] = " + obj.citizenshipCode + ", tb.[Sex] = " + obj.gender + ", tb.[Street 1] = " + obj.address.appartmentNo + " " + obj.address.streetNo + " " + obj.address.streetName + ", tb.[Zip Code] = " + obj.address.postalCode + ", tb.[City] = " + obj.address.city + " ,tb.[Country] = " + obj.address.country+" WHERE tb.[Chart Number] = "+obj.Identifier;
+
+            string query = "UPDATE MWPAT SET [First Name] = '" + obj.firstName + "', [Last Name] = '" + obj.lastName + "', [Middle Initial] = '" + obj.prefix + "', [Date of Birth] = '" + obj.birthDate + "', [Social security number] = '" + obj.citizenshipCode + "', [Sex] = '" + obj.gender + "', [Street 1] = '" + obj.address.appartmentNo + " " + obj.address.streetNo + " " + obj.address.streetName + "', [Zip Code] = '" + obj.address.postalCode + "', [City] = '" + obj.address.city + "' ,[Country] = '" + obj.address.country+"'"  + " FROM MWPAT tb WHERE tb.[Chart Number] = '"+obj.Identifier+"'";
             AdsDataReader reader = null;
+            Debug.WriteLine(query);
             using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
             {
                 try
@@ -879,9 +880,38 @@ namespace MedisoftFhirAgent.DatabaseContexts
             }
         }
 
-       
 
-      
+        public bool setMigrationFailed(Patient obj)
+        {
+            string query = "MERGE MWPAT_TAR ta "
+                          + "ON(ta.[Chart Number] = '" + obj.Identifier + "') "
+                          + "WHEN MATCHED THEN "
+                          + "UPDATE SET ta.[Migration Status] = 'F'";
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                    return true;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Merge_data_scheduler_", ex.Message);
+                    return false;
+                }
+            }
+        }
+
+
+
+
     }
 
 }

@@ -50,7 +50,7 @@ namespace MedisoftFhirAgent.Repositories
                 {
                     inBound.Payload = inBound.Payload.Replace(System.Environment.NewLine, string.Empty);
 
-                    Patient p = JsonSerializer.Deserialize<Patient>(inBound.Payload);
+                    Patient p = Newtonsoft.Json.JsonConvert.DeserializeObject<Patient>(inBound.Payload);
                      _pr.Add(p);
 
                 }
@@ -70,6 +70,7 @@ namespace MedisoftFhirAgent.Repositories
             {
                 foreach (var pat in lisofPatients)
                 {
+                    Debug.WriteLine("Identifier: "+pat.Identifier);
                     if (_context.findPatient(pat))
                     {
                         _context.updatePatient(pat);
@@ -119,7 +120,18 @@ namespace MedisoftFhirAgent.Repositories
                 return false;
             }
         }
-
+        public bool migrationFailed(Patient obj)
+        {
+            if(_context.findMigratedPatient(obj))
+            {
+                _context.setMigrationFailed(obj);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
         public List<Patient> GetAllDeletedPatients()
         {
             return _context.DeletedPatients();

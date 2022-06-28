@@ -54,6 +54,7 @@ namespace MedisoftFhirAgent.Controllers
         public bool savePatients(string obj)
         {
           //  Debug.WriteLine(this.MapDataToSource(obj));
+
             _ipr.savePatients(_ipr.getPatientsDataFromJson(this.MapDataToSource(obj)));
             return true;
         }
@@ -64,6 +65,10 @@ namespace MedisoftFhirAgent.Controllers
         public bool migrationConfirmed(Patient obj)
         {
             return _ipr.migrationConfirmed(obj);
+        }
+        public bool migrationFailed(Patient obj)
+        {
+            return _ipr.migrationFailed(obj);
         }
     }
 }

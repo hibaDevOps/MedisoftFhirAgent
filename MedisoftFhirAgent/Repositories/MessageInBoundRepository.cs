@@ -39,9 +39,11 @@ namespace MedisoftFhirAgent.Repositories
                     var response = await client.GetAsync(url);
 
                     string result = response.Content.ReadAsStringAsync().Result;
-                    result = "[{\"id\":\"11\",\"messsgeQueueId\":\"15\",\"createdDate\":\"5/17/202212:00:00AM\",\"type\":\"I\",\"processingDate\":\"5/28/20228:32:40PM\",\"payload\":\"{\\r\\n\\\"identifier\\\":\\\"TIMMMMMP\\\",\\r\\n\\\"prefix\\\":\\\"Mr\\\",\\r\\n\\\"firstName\\\":\\\"ABC\\\",\\r\\n\\\"lastName\\\":\\\"XYZ\\\",\\r\\n\\\"birthDate\\\":\\\"1991-02-15\\\",\\r\\n\\\"birthPlace\\\":\\\"NorthCarolina\\\",\\r\\n\\\"citizenshipCode\\\":\\\"US\\\",\\r\\n\\\"gender\\\":\\\"Male\\\",\\r\\n\\\"address\\\":{\\r\\n\\\"streetName\\\":\\\"St1\\\",\\r\\n\\\"streetNo\\\":\\\"18\\\",\\r\\n\\\"appartmentNo\\\":\\\"1008\\\",\\r\\n\\\"postalCode\\\":\\\"27703\\\",\\r\\n\\\"city\\\":\\\"NorthCarolina\\\",\\r\\n\\\"country\\\":\\\"US\\\",\\r\\n\\\"type\\\":\\\"string\\\"\\r\\n}\\r\\n}\",\"error\":\"\",\"resourceType\":\"Patient\",\"source\":\"MediSoft\",\"fhirid\":\"MEDINT0006\",\"status\":\"VC\"}]"; 
+                   
+                   // result = "[{\"id\":\"11\",\"messsgeQueueId\":\"15\",\"createdDate\":\"5/17/202212:00:00AM\",\"type\":\"I\",\"processingDate\":\"5/28/20228:32:40PM\",\"payload\":\"{\\r\\n\\\"identifier\\\":\\\"TEST20\\\",\\r\\n\\\"prefix\\\":\\\"Ms\\\",\\r\\n\\\"firstName\\\":\\\"hiba Sheikh\\\",\\r\\n\\\"lastName\\\":\\\"Sheikh\\\",\\r\\n\\\"birthDate\\\":\\\"1991-02-15\\\",\\r\\n\\\"birthPlace\\\":\\\"NorthCarolina\\\",\\r\\n\\\"citizenshipCode\\\":\\\"US\\\",\\r\\n\\\"gender\\\":\\\"Male\\\",\\r\\n\\\"address\\\":{\\r\\n\\\"streetName\\\":\\\"St1\\\",\\r\\n\\\"streetNo\\\":\\\"18\\\",\\r\\n\\\"appartmentNo\\\":\\\"1008\\\",\\r\\n\\\"postalCode\\\":\\\"27703\\\",\\r\\n\\\"city\\\":\\\"NorthCarolina\\\",\\r\\n\\\"country\\\":\\\"US\\\",\\r\\n\\\"type\\\":\\\"string\\\"\\r\\n}\\r\\n}\",\"error\":\"\",\"resourceType\":\"Patient\",\"source\":\"MediSoft\",\"fhirid\":\"MEDINT0006\",\"status\":\"VC\"}]"; 
                     if (result !="")
                     {
+
                        // List<MessageQueueInBound> allData = JsonSerializer.Deserialize<List<MessageQueueInBound>>(result);
                         _ipr.Log("Get_Medisoft_pull_API", result);
                          string jsonSample = "[{\"id\":\"\",\"createdDate\":\"2022-05-17\",\"type\":\"I\",\"processingDate\":\"\",\"payload\":\"[{\"identifier\":\"PAT0001\",\"prefix\":\"Mr\",\"firstName\":\"ABC\",\"lastName\":\"XYZ\",\"birthDate\":\"1991-02-15\",\"birthPlace\":\"NorthCarolina\",\"citizenshipCode\":\"US\",\"gender\":\"Male\",\"address\":{\"streetName\":\"string\",\"streetNo\":\"string\",\"appartmentNo\":\"string\",\"postalCode\":\"27703\",\"city\":\"NorthCarolina\",\"country\":\"US\",\"type\":\"string\"}}]\",\"error\":\"\",\"resourceType\":\"Patient\",\"source\":\"MediSoft\",\"status\":\"\"}]";
@@ -102,7 +104,7 @@ namespace MedisoftFhirAgent.Repositories
 
                 foreach (var queue in _msgQueue)
                 {
-                    if (queue.Fhirid != "")
+                    if (queue.Status == "VC")
                     {
                         Debug.WriteLine(queue.Fhirid);
                         if (_ptr.migrationConfirmed(JsonConvert.DeserializeObject<Patient>(queue.Payload)))
@@ -110,19 +112,16 @@ namespace MedisoftFhirAgent.Repositories
                             Debug.WriteLine("Fhir found but record found in migrated records");
                             queue.Status = "C";
                         }
-                        else
-                        {
-                            Debug.WriteLine("Fhir found but record not found in migrated records");
-                            queue.Status = "F";
-                            _ptr.logFailedRecords(queue.Id, "Patient", "Patient records not found");
-                        }
+                     
                     }
                     else
                     {
-                        Debug.WriteLine("Fhir not found");
-                        _ptr.logFailedRecords(queue.Id, "Patient", "FHIR was null");
+                         
+                        if (_ptr.migrationFailed(JsonConvert.DeserializeObject<Patient>(queue.Payload))){
+                            queue.Status = "F";
+                            _ptr.logFailedRecords(queue.Id, "Patient", "Patient records not Verified");
+                        }
 
-                        queue.Status = "F";
                     }
                 }
             }
