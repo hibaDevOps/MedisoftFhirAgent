@@ -1,4 +1,5 @@
-﻿using MedisoftFhirAgent.DAL.Entities;
+﻿using MedisoftFhirAgent.Application.Constants;
+using MedisoftFhirAgent.DAL.Entities;
 using MedisoftFhirAgent.DAL.Entities.MessagesQueue;
 using MedisoftFhirAgent.DatabaseContexts;
 using MedisoftFhirAgent.Interfaces;
@@ -49,7 +50,7 @@ namespace MedisoftFhirAgent.Repositories
                 if (inBound.Payload != null)
                 {
                     inBound.Payload = inBound.Payload.Replace(System.Environment.NewLine, string.Empty);
-
+           
                     Patient p = Newtonsoft.Json.JsonConvert.DeserializeObject<Patient>(inBound.Payload);
                      _pr.Add(p);
 
@@ -70,7 +71,6 @@ namespace MedisoftFhirAgent.Repositories
             {
                 foreach (var pat in lisofPatients)
                 {
-                    Debug.WriteLine("Identifier: "+pat.Identifier);
                     if (_context.findPatient(pat))
                     {
                         _context.updatePatient(pat);
@@ -89,6 +89,8 @@ namespace MedisoftFhirAgent.Repositories
             }
             return false;
         }
+
+        
         public bool setDataMigrationStatus(List<Patient> lisOfPayload)
         {
             return _context.setPatientDataMigrationStatus(lisOfPayload);
@@ -135,6 +137,24 @@ namespace MedisoftFhirAgent.Repositories
         public List<Patient> GetAllDeletedPatients()
         {
             return _context.DeletedPatients();
+        }
+
+        public bool deletePatients(List<Patient> listOfPatients)
+        {
+           if(listOfPatients != null && listOfPatients.Count() > 0)
+            {
+                return _context.deletePatients(listOfPatients);
+            }
+            return false;
+        }
+
+        public bool UpdateDeletePatientStatus(List<Patient> p)
+        {
+            if (p != null && p.Count() > 0)
+            {
+                return _context.updateDeletedRecordsMigrated(p);
+            }
+            return false;
         }
     }
 }

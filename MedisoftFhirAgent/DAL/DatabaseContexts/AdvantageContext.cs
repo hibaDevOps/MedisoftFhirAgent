@@ -1,5 +1,6 @@
 ﻿using Advantage.Data.Provider;
 using MedisoftFhirAgent.Controllers;
+using MedisoftFhirAgent.DAL.Configuration;
 using MedisoftFhirAgent.DAL.Entities;
 using MedisoftFhirAgent.DAL.Entities.Scheduler;
 using System;
@@ -27,7 +28,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
         {
             AdsDataReader reader = null;
 
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=REMOTE;Max Pool Size=50;Min Pool Size = 5; Pooling = True; "))
             {
                 try
 
@@ -61,7 +62,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "INSERT INTO MWMIG_ERR ([Migration ID], [Entity Type], [Message]) VALUES ('"+migId+"','"+type+"','"+message+"')";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -94,7 +95,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT_TAR WHERE MWPAT_TAR.[Migration Status] = 'NM'";
                 AdsDataReader reader = null;
 
-                using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+                using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
                 {
                     try
 
@@ -171,7 +172,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT_TAR WHERE MWPAT_TAR.[Deleted] = 1";
                 AdsDataReader reader = null;
 
-                using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+                using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
                 {
                     try
 
@@ -225,7 +226,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     }
                     catch (AdsException ex)
                     {
-                        _lgc.Log("Medisoft Database exception", ex.Message);
+                        _lgc.Log("Medisoft Database GetDelete exception", ex.Message);
                     }
                 }
             }
@@ -248,7 +249,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT WHERE TIMESTAMPDIFF( SQL_TSI_SECOND, MWPAT.[CreatedAt], now() ) <= 60";
                 AdsDataReader reader = null;
 
-                using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+                using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
                 {
                     try
 
@@ -329,7 +330,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                     + " trim([Assigned provider]) provider, [Inactive] inactive from MWPAT WHERE TIMESTAMPDIFF( SQL_TSI_SECOND, MWPAT.[CreatedAt], MWPAT.[Date Modified] ) > 0 AND TIMESTAMPDIFF( SQL_TSI_SECOND, MWPAT.[Date Modified], now() ) <= 60";
                 AdsDataReader reader = null;
 
-                using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+                using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
                 {
                     try
 
@@ -407,7 +408,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "UPDATE MWMIG_UPD SET MWMIG_UPD.[Status] = 1 FROM MWMIG_UPD WHERE MWMIG_UPD.[KeyValue] IN (" + joined + ")";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -429,6 +430,41 @@ namespace MedisoftFhirAgent.DatabaseContexts
             return false;
         }
 
+        public bool updateDeletedRecordsMigrated(List<Patient> listPatient)
+        {
+            List<string> Identierfiers = new List<string>();
+            foreach (var pat in listPatient)
+            {
+                Identierfiers.Add("'" + pat.Identifier + "'");
+            }
+            string joined = string.Join(",", Identierfiers);
+            Debug.WriteLine(joined);
+
+            string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Deleted] = 2 FROM MWPAT_TAR WHERE MWPAT_TAR.[Chart Number] IN (" + joined + ")";
+            Debug.WriteLine(query);
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                    return true;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Update Deleted Migration Record Status", ex.Message);
+                }
+            }
+
+            return false;
+        }
+
         public bool setPatientDataMigrationStatus(List<Patient> listPatient)
         {
             List<string> Identierfiers = new List<string>();
@@ -442,7 +478,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Migration Status] = 'M' FROM MWPAT_TAR WHERE MWPAT_TAR.[Chart Number] IN (" + joined+")";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -493,7 +529,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "INSERT INTO MWPAT ([Chart Number], [First Name], [Last Name], [Middle Initial], [Sex], [Date of Birth], [State], [Social Security Number], [Street 1], [City], [Patient Type], [Country], [CreatedAt]) VALUES " + result;
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -515,12 +551,49 @@ namespace MedisoftFhirAgent.DatabaseContexts
 
         }
 
+        public bool deletePatients(List<Patient> listPatients)
+        {
+            string inst = "";
+            string joined = "";
+            List<string> eachPat = new List<string>();
+            foreach (var pt in listPatients)
+            {
+                eachPat.Add("\'" + pt.Identifier + "\'");
+            
+           
+            }
+            joined = string.Join(",", eachPat);
+            inst ="(" + joined + ")";
+
+            string query = "Delete FROM MWPAT WHERE [Chart Number] IN " + inst;
+            AdsDataReader reader = null;
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
+            {
+                try
+
+                {
+                    conn.Open();
+                    cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+                    reader = cmd.ExecuteReader();
+
+                    conn.Close();
+                    return true;
+                }
+                catch (AdsException ex)
+                {
+                    _lgc.Log("Data Deletion FROM MWPAT ", ex.Message);
+                }
+            }
+            return true;
+
+        }
         public List<Duration> getLogDurations()
         {
             string query = "SELECT [Id], [start], [status] FROM MWSCH WHERE MWSCH.[status] = 0 LIMIT 2";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=REMOTE;Max Pool Size=50;Min Pool Size = 5; Pooling = True; "))
             {
                 try
 
@@ -565,7 +638,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "INSERT INTO MWSCH ([start]) VALUES (now())";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=REMOTE;Max Pool Size=50;Min Pool Size = 5; Pooling = True; "))
             {
                 try
 
@@ -601,7 +674,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "INSERT INTO MWMIG_INS ([KeyValue], [TableType]) VALUES " + result;
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -625,7 +698,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
         {
             string query = "Select ta.[KeyValue] From MWMIG_INS ta WHERE ta.[KeyValue] = '" + identifier + "' AND ta.[TableType]='"+type+"'";
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -655,7 +728,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
         {
             string query = "DELETE FROM MWMIG_INS Where [KeyValue] IN (SELECT tn.[KeyValue] FROM MWMIG_INS tn INNER JOIN MWPAT tp ON tn.[KeyValue] = tp.[Chart Number] WHERE tp.[Date Modified] IS NOT NULL)";
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -685,7 +758,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
 
 
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -713,7 +786,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                         + "THEN UPDATE SET ta.[First Name] = tb.[First Name] , ta.[Last Name] = tb.[Last Name] , ta.[Middle Initial] = tb.[Middle Initial], ta.[Sex] = tb.[Sex], ta.[Date of Birth] = tb.[Date of Birth], ta.[State] = tb.[State], ta.[Social Security Number] = tb.[Social Security Number], ta.[Street 1] = tb.[Street 1], ta.[City] = tb.[City], ta.[Patient Type] =  tb.[Patient Type], ta.[Country] = tb.[Country],  ta.[Migration Status] = 'NM' ";
 
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -737,11 +810,11 @@ namespace MedisoftFhirAgent.DatabaseContexts
            public void MergeDeletedRecords()
            {
             string query = "UPDATE MWPAT_TAR SET MWPAT_TAR.[Deleted] = 1 FROM MWPAT_TAR ta "+
-                            "WHERE ta.[Chart Number] not in "+ 
+                            "WHERE  ta.[Deleted] = 0 AND ta.[Chart Number] not in "+ 
                                     "(SELECT c.[Chart Number] "+
                                        "FROM MWPAT c ); ";
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -774,7 +847,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "Select ta.[Chart Number] From MWPAT_TAR ta WHERE ta.[Chart Number] = '" + obj.Identifier +"' AND ta.[Migration Status]='M'";
             Debug.WriteLine(query);
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -803,7 +876,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
         {
             string query = "Select ta.[Chart Number] From MWPAT ta WHERE ta.[Chart Number] = '" + obj.Identifier + "'";
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -834,7 +907,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
             string query = "UPDATE MWPAT SET [First Name] = '" + obj.firstName + "', [Last Name] = '" + obj.lastName + "', [Middle Initial] = '" + obj.prefix + "', [Date of Birth] = '" + obj.birthDate + "', [Social security number] = '" + obj.citizenshipCode + "', [Sex] = '" + obj.gender + "', [Street 1] = '" + obj.address.appartmentNo + " " + obj.address.streetNo + " " + obj.address.streetName + "', [Zip Code] = '" + obj.address.postalCode + "', [City] = '" + obj.address.city + "' ,[Country] = '" + obj.address.country+"'"  + " FROM MWPAT tb WHERE tb.[Chart Number] = '"+obj.Identifier+"'";
             AdsDataReader reader = null;
             Debug.WriteLine(query);
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -859,7 +932,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                           + "WHEN MATCHED THEN "
                           + "UPDATE SET ta.[Migration Status] = 'C'";
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 
@@ -888,7 +961,7 @@ namespace MedisoftFhirAgent.DatabaseContexts
                           + "WHEN MATCHED THEN "
                           + "UPDATE SET ta.[Migration Status] = 'F'";
             AdsDataReader reader = null;
-            using (AdsConnection conn = new AdsConnection("Data Source=C:\\MediData\\Tutor\\mwddf.add;User ID=user;Password=password;ServerType=LOCAL;"))
+            using (AdsConnection conn = new AdsConnection(DatabaseSettings.DatabaseConnection))
             {
                 try
 

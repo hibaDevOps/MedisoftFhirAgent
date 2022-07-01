@@ -44,10 +44,8 @@ namespace MedisoftFhirAgent.Repositories
                     if (result !="")
                     {
 
-                       // List<MessageQueueInBound> allData = JsonSerializer.Deserialize<List<MessageQueueInBound>>(result);
                         _ipr.Log("Get_Medisoft_pull_API", result);
-                         string jsonSample = "[{\"id\":\"\",\"createdDate\":\"2022-05-17\",\"type\":\"I\",\"processingDate\":\"\",\"payload\":\"[{\"identifier\":\"PAT0001\",\"prefix\":\"Mr\",\"firstName\":\"ABC\",\"lastName\":\"XYZ\",\"birthDate\":\"1991-02-15\",\"birthPlace\":\"NorthCarolina\",\"citizenshipCode\":\"US\",\"gender\":\"Male\",\"address\":{\"streetName\":\"string\",\"streetNo\":\"string\",\"appartmentNo\":\"string\",\"postalCode\":\"27703\",\"city\":\"NorthCarolina\",\"country\":\"US\",\"type\":\"string\"}}]\",\"error\":\"\",\"resourceType\":\"Patient\",\"source\":\"MediSoft\",\"status\":\"\"}]";
-                         _ptr.savePatients(result);
+                         _ptr.processPatientRecords(result);
                         return null;
                     }
                     else
@@ -110,6 +108,7 @@ namespace MedisoftFhirAgent.Repositories
                         if (_ptr.migrationConfirmed(JsonConvert.DeserializeObject<Patient>(queue.Payload)))
                         {
                             Debug.WriteLine("Fhir found but record found in migrated records");
+                            Debug.WriteLine(queue.ResourceType);
                             queue.Status = "C";
                         }
                      

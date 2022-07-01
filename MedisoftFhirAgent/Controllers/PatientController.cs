@@ -12,6 +12,7 @@ using MedisoftFhirAgent.DAL.Entities.MessagesQueue;
 using System.Text.Json;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using MedisoftFhirAgent.Application.Constants;
 
 namespace MedisoftFhirAgent.Controllers
 {
@@ -51,11 +52,24 @@ namespace MedisoftFhirAgent.Controllers
         {
             return _ipr.logFailedRecords(identifier, type, message);
         }
-        public bool savePatients(string obj)
+        public bool processPatientRecords(string obj)
         {
-          //  Debug.WriteLine(this.MapDataToSource(obj));
+          
 
-            _ipr.savePatients(_ipr.getPatientsDataFromJson(this.MapDataToSource(obj)));
+            List<MessageQueueInBound> saveRecords = new List<MessageQueueInBound>();
+            List<MessageQueueInBound> deletedRecords = new List<MessageQueueInBound>();
+            foreach(var inBound in MapDataToSource(obj))
+            {
+                if(inBound.ResourceType == Constants.DeletedPatientsResourceType) {
+                    deletedRecords.Add(inBound);
+                }
+                else
+                {
+                    saveRecords.Add(inBound);
+                }
+            }
+            _ipr.savePatients(_ipr.getPatientsDataFromJson(saveRecords));
+            _ipr.deletePatients(_ipr.getPatientsDataFromJson(deletedRecords));
             return true;
         }
         public string LogPatients()

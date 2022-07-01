@@ -148,7 +148,7 @@ namespace MedisoftFhirAgent.Repositories
                         string result = response.Content.ReadAsStringAsync().Result;
                         if (result == "true")
                         {
-                           // this.sendPatientDataMigration(listOfObject);  //changes the status of the migrated data
+                            _ipr.UpdateDeletePatientStatus(listOfObject);
                         }
                         else
                         {
