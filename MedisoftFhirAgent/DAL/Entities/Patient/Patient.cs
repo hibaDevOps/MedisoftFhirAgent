@@ -17,7 +17,25 @@ namespace MedisoftFhirAgent.DAL.Entities
         public string citizenshipCode { get; set; }
         public string gender { get; set; }
         public PatientAddress address { get; set; }
-     
-    }
+		public string language { get; set; }
+		public string address1 { get; set; }
+		public string address2 { get; set; }
+		public string city { get; set; }
+		public string state { get; set; }
+		public string zip { get; set; }
+		public string wPhone { get; set; }
+
+		public string hPhone { get; set; }
+		public string mobile { get; set; }
+		public string fax { get; set; }
+		public string altPhone { get; set; }
+		public string ssn { get; set; }
+		public string defaultPhysician { get; set; }
+		public string email { get; set; }
+		public string marritalStatus { get; set; }
+		public string inactive { get; set; }
+
+
+	}
 
 }

@@ -9,9 +9,15 @@ namespace MedisoftFhirAgent.Application.Entities
     public class PatientDto
     {
 		public string patientId { get; set; }
+		public string Identifier { get; set; }
+		public string prefix { get; set; }
 		public string firstName { get; set; }
 		public string lastName { get; set; }
-		public string middleName { get; set; }
+		public string birthDate { get; set; }
+		public string birthPlace { get; set; }
+		public string citizenshipCode { get; set; }
+		public string gender { get; set; }
+		public PatientAddressDto address { get; set; }
 		public string suffix { get; set; }
 		public string race { get; set; }
 		public string ethnicity { get; set; }
@@ -28,13 +34,10 @@ namespace MedisoftFhirAgent.Application.Entities
 		public string fax { get; set; }
 		public string altPhone { get; set; }
 		public string ssn { get; set; }
-		public string sex { get; set; }
-		public string dob { get; set; }
 		public string defaultPhysician { get; set; }
 		public string email { get; set; }
 		public string marritalStatus { get; set; }
 		public string inactive { get; set; }
-		public string chartNumber { get; set; }
 
 	}
 }
